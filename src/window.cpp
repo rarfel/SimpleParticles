@@ -60,17 +60,19 @@ void Attract(Particle particles[], size_t sizeParticlues, float vel, float delta
 {
   for (int j = i; j < sizeParticlues; j++)
   {
-    particles[i].speedX = vel;
-    particles[i].speedY = vel;
+    if(particles[j].active)
+    {
+      particles[i].speedX = vel;
+      particles[i].speedY = vel;
 
-    particles[i].particle.x += ((particles[j].particle.x - particles[i].particle.x) * particles[i].speedX) * deltaTime;
-    particles[i].particle.y += ((particles[j].particle.y - particles[i].particle.y) * particles[i].speedY) * deltaTime;
+      particles[i].particle.x += ((particles[j].particle.x - particles[i].particle.x) * particles[i].speedX) * deltaTime;
+      particles[i].particle.y += ((particles[j].particle.y - particles[i].particle.y) * particles[i].speedY) * deltaTime;
+    }
   }
 }
 
 void MoveParticles(SDLWindowState state, Particle particles[], size_t sizeParticlues, float speed, float deltaTime)
 {
-  float radius = 10;
   for (int i = 0; i < sizeParticlues; i++)
   {
     InitParticles(state, particles[i]);
@@ -80,14 +82,14 @@ void MoveParticles(SDLWindowState state, Particle particles[], size_t sizePartic
       SDL_RenderFillRect(state.renderer, &particles[i].particle);
 
       CheckCollision(state,particles[i],speed);
-      Attract(particles, sizeParticlues, 0.1, deltaTime, i);
+      Attract(particles, sizeParticlues, 0.01, deltaTime, i);
     }
   }
 }
 
 void InitParticles(SDLWindowState state, Particle &particles)
 {
-  int size = 10;
+  int size = 5;
   if (!particles.active)
   {
     particles.active = true;
