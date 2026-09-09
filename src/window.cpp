@@ -56,18 +56,15 @@ void LoopHandler(SDLWindowState state, glm::vec4 backgroundColor, Particle parti
   CleanUp(state);
 }
 
-void Attract(Particle particles[], size_t sizeParticlues, float vel, float deltaTime)
+void Attract(Particle particles[], size_t sizeParticlues, float vel, float deltaTime, int i)
 {
-  for (int i = 0; i < sizeParticlues; i++)
+  for (int j = i; j < sizeParticlues; j++)
   {
-    for (int j = i; j < sizeParticlues; j++)
-    {
-      particles[i].speedX = vel;
-      particles[i].speedY = vel;
+    particles[i].speedX = vel;
+    particles[i].speedY = vel;
 
-      particles[i].particle.x += ((particles[j].particle.x - particles[i].particle.x) * particles[i].speedX) * deltaTime;
-      particles[i].particle.y += ((particles[j].particle.y - particles[i].particle.y) * particles[i].speedY) * deltaTime;
-    }
+    particles[i].particle.x += ((particles[j].particle.x - particles[i].particle.x) * particles[i].speedX) * deltaTime;
+    particles[i].particle.y += ((particles[j].particle.y - particles[i].particle.y) * particles[i].speedY) * deltaTime;
   }
 }
 
@@ -83,7 +80,7 @@ void MoveParticles(SDLWindowState state, Particle particles[], size_t sizePartic
       SDL_RenderFillRect(state.renderer, &particles[i].particle);
 
       CheckCollision(state,particles[i],speed);
-      Attract(particles, sizeParticlues, 0.001, deltaTime);
+      Attract(particles, sizeParticlues, 0.1, deltaTime, i);
     }
   }
 }
