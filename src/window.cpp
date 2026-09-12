@@ -58,19 +58,31 @@ void LoopHandler(SDLWindowState state, glm::vec4 backgroundColor, Particle parti
 
 void Attract(Particle particles[], size_t sizeParticlues, float vel, float deltaTime, int i)
 {
+  float xAxis, yAxis;
+  float repel = 1; // how much particles repel each other, setting to zero will make the last particle immobile and every particle attract to it
   for (int j = i + 1; j < sizeParticlues; j++)
   {
     if(particles[j].active)
     {
       particles[i].speedX = vel;
       particles[i].speedY = vel;
-      float xAxis = particles[j].particle.x - particles[i].particle.x;
-      float yAxis = particles[j].particle.y - particles[i].particle.y;
+
+      particles[j].speedX = vel;
+      particles[j].speedY = vel;
+
+      xAxis = particles[j].particle.x - particles[i].particle.x;
+      yAxis = particles[j].particle.y - particles[i].particle.y;
       float distance = sqrt((std::pow(xAxis,2) + std::pow(yAxis,2)));
 
       particles[i].particle.x += ((xAxis) * particles[i].speedX) * deltaTime;
       particles[i].particle.y += ((yAxis) * particles[i].speedY) * deltaTime;
-      //SDL_Log("(%d to %d) -> distance:%f", i, j, distance);
+
+      //particles[j].particle.x -= ((xAxis) * particles[j].speedX) * deltaTime;
+      //particles[j].particle.y -= ((yAxis) * particles[j].speedY) * deltaTime;
+
+      particles[sizeParticlues-i].particle.x += ((-xAxis) * particles[sizeParticlues-i].speedX * repel) * deltaTime;
+      particles[sizeParticlues-i].particle.y += ((-yAxis) * particles[sizeParticlues-i].speedY * repel) * deltaTime;
+      particles[sizeParticlues-1].color = {0,0,255}; // marking the last particle
     }
   }
 }
@@ -85,7 +97,6 @@ void MoveParticles(SDLWindowState state, Particle particles[], size_t sizePartic
       SDL_SetRenderDrawColor(state.renderer, particles[i].color.r, particles[i].color.g, particles[i].color.b, 255);
       SDL_RenderFillRect(state.renderer, &particles[i].particle);
 
-      CheckCollision(state,particles[i],speed);
       Attract(particles, sizeParticlues, 0.1, deltaTime, i);
     }
   }
@@ -104,32 +115,6 @@ void InitParticles(SDLWindowState state, Particle &particles)
     particles.particle.x = rand() % (int)state.width;
     particles.particle.y = rand() % (int)state.height;
     particles.color = {255, 0, 0};
-  }
-}
-
-void CheckCollision(SDLWindowState state, Particle &particles, float speed)
-{
-  int percentage = 2; // roll a random number between 0 and 1 [0,1]
-  if(particles.particle.x > state.width)
-  {
-    particles.particle.x = 0; 
-    particles.speedX = (rand() % percentage) >= 1 ? speed: -(speed);
-  }
-  if(particles.particle.x < 0)
-  {
-    particles.particle.x = state.width;
-    particles.speedX = (rand() % percentage) >= 1 ? speed: -(speed);
-  }
-
-  if(particles.particle.y > state.height)
-  {
-    particles.particle.y = 0;
-    particles.speedY = (rand() % percentage) >= 1 ? speed: -(speed);
-  }
-  if(particles.particle.y < 0)
-  {
-    particles.particle.y = state.height;
-    particles.speedY = (rand() % percentage) >= 1 ? speed: -(speed);
   }
 }
 
