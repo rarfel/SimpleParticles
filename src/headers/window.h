@@ -22,17 +22,18 @@ struct Particle
 int InitSDL();
 
 int CreateWindowAndRenderer(const char *title, SDL_WindowFlags flags, SDLWindowState &state);
-bool EventHandler(SDLWindowState *state, SDL_Event &event, bool &restart);
 void DrawBackground(SDLWindowState state, glm::vec4 backgroundColor);
 void DrawBackground(SDLWindowState state, glm::vec4 backgroundColor);
 void CleanUp(SDLWindowState &state);
 
 void LoopHandler(SDLWindowState state, glm::vec4 backgroundColor, Particle particles[], size_t sizeParticlues);
+bool EventHandler(SDLWindowState *state, SDL_Event &event, bool &restart, bool &pause);
 
 void InitParticles(SDLWindowState state, Particle &particles);
 void RestartPartilcles(SDLWindowState state, Particle &particles);
 void WallCollision(SDLWindowState state, Particle particles[], int i);
 
-void Attract(Particle particles[], size_t sizeParticlues, float vel, float deltaTime, int i, int j);
+void Attract(Particle particles[], size_t sizeParticlues, float force, float xAxis, float yAxis, float deltaTime, int i, int j);
+void Repel(Particle particles[], size_t sizeParticlues, float force, float xAxis, float yAxis, float deltaTime, int i, int j);
 
-void MoveParticles(SDLWindowState state, Particle particles[], size_t sizeParticlues, float speed, float deltaTime, bool &restart);
+void MoveParticles(SDLWindowState state, Particle particles[], size_t sizeParticlues, float deltaTime, bool &restart, bool &pause);

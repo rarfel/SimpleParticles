@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 
   glm::vec4 backgroundColor = {0.0, 0.0, 0.0, 1.0};
 
-  Particle particles[100];
+  Particle particles[1500];
   size_t sizeParticles = sizeof(particles)/sizeof(particles[0]);
 
   LoopHandler(state, backgroundColor, particles, sizeParticles);

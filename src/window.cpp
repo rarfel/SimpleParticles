@@ -29,9 +29,9 @@ void LoopHandler(SDLWindowState state, glm::vec4 backgroundColor, Particle parti
 {
   bool running = true;
   bool restart = false;
+  bool pause = false;
   uint64_t previousTime = SDL_GetTicks();
   const float PI = 3.1415;
-  float speed = 0;
   srand(time(NULL));
 
   while(running)
@@ -42,11 +42,11 @@ void LoopHandler(SDLWindowState state, glm::vec4 backgroundColor, Particle parti
 
     while (SDL_PollEvent(&event))
     {
-      running = EventHandler(&state, event, restart);
+      running = EventHandler(&state, event, restart, pause);
     }
     DrawBackground(state, backgroundColor);
 
-    MoveParticles(state, particles, sizeParticlues, speed, deltaTime, restart);
+    MoveParticles(state, particles, sizeParticlues, deltaTime, restart, pause);
 
     //swap buffers and show to screen
     SDL_RenderPresent(state.renderer);
@@ -56,33 +56,13 @@ void LoopHandler(SDLWindowState state, glm::vec4 backgroundColor, Particle parti
   CleanUp(state);
 }
 
-void Repel(Particle particles[], size_t sizeParticlues, float deltaTime, int i, int j)
+void MoveParticles(SDLWindowState state, Particle particles[], size_t sizeParticlues, float deltaTime, bool &restart, bool &pause)
 {
+  float force = 1.1;
+  float speed = 0.1;
   float xAxis;
   float yAxis;
-  float force = 0.1;
-
-  xAxis = particles[j].particle.x - particles[i].particle.x;
-  yAxis = particles[j].particle.y - particles[i].particle.y;
-
-  // this repels from first to last - 1
-  particles[i].particle.x += ((-xAxis) * particles[i].speedX * force) * deltaTime;
-  particles[i].particle.y += ((-yAxis) * particles[i].speedY * force) * deltaTime;
-
-  // this repels the last
-  if(j >= sizeParticlues - 1)
-  {
-    particles[j].particle.x += ((xAxis) * particles[j].speedX * force) * deltaTime;
-    particles[j].particle.y += ((yAxis) * particles[j].speedY * force) * deltaTime;
-  }
-
-  particles[0].color = {0,255,0}; // marking the first particle
-  particles[sizeParticlues-1].color = {0,0,255}; // marking the last particle
-}
-
-
-void MoveParticles(SDLWindowState state, Particle particles[], size_t sizeParticlues, float speed, float deltaTime, bool &restart)
-{
+  
   for (int i = 0; i < sizeParticlues; i++)
   {
     InitParticles(state, particles[i]);
@@ -93,10 +73,20 @@ void MoveParticles(SDLWindowState state, Particle particles[], size_t sizePartic
 
       for (int j = i + 1; j < sizeParticlues; j++)
       {
-        if(particles[j].active)
+        if(particles[j].active & !pause)
         {
-          Attract(particles, sizeParticlues, 0.1, deltaTime, i, j);
-          Repel(particles, sizeParticlues, deltaTime, i, j);
+          particles[i].speedX = speed;
+          particles[i].speedY = speed;
+
+          particles[j].speedX = speed;
+          particles[j].speedY = speed;
+
+
+          xAxis = particles[j].particle.x - particles[i].particle.x;
+          yAxis = particles[j].particle.y - particles[i].particle.y;
+
+          Attract(particles, sizeParticlues, force, xAxis, yAxis, deltaTime, i, j);
+          Repel(particles, sizeParticlues, force, xAxis, yAxis, deltaTime, i, j);
         }
       }
       WallCollision(state, particles, i);
@@ -106,7 +96,6 @@ void MoveParticles(SDLWindowState state, Particle particles[], size_t sizePartic
       RestartPartilcles(state,particles[i]);
     }
   }
-
   restart = false;
 }
 
@@ -125,38 +114,38 @@ void WallCollision(SDLWindowState state, Particle particles[], int i)
   {particles[i].particle.y = state.height;}
 }
 
-void Attract(Particle particles[], size_t sizeParticlues, float vel, float deltaTime, int i, int j)
+void Attract(Particle particles[], size_t sizeParticlues, float force, float xAxis, float yAxis, float deltaTime, int i, int j)
 {
-  float xAxis;
-  float yAxis;
-
-  particles[i].speedX = vel;
-  particles[i].speedY = vel;
-
-  particles[j].speedX = vel;
-  particles[j].speedY = vel;
-
-  xAxis = particles[j].particle.x - particles[i].particle.x;
-  yAxis = particles[j].particle.y - particles[i].particle.y;
-
   // this attracts from first to last - 1
-  particles[i].particle.x += ((xAxis) * particles[i].speedX) * deltaTime;
-  particles[i].particle.y += ((yAxis) * particles[i].speedY) * deltaTime;
+  particles[i].particle.x += ((xAxis) * particles[i].speedX * force) * deltaTime;
+  particles[i].particle.y += ((yAxis) * particles[i].speedY * force) * deltaTime;
 
   // this attracts the last
   if(j >= sizeParticlues - 1)
   {
-    particles[j].particle.x += ((-xAxis) * particles[j].speedX) * deltaTime;
-    particles[j].particle.y += ((-yAxis) * particles[j].speedY) * deltaTime;
+    particles[j].particle.x += ((-xAxis) * particles[j].speedX * force) * deltaTime;
+    particles[j].particle.y += ((-yAxis) * particles[j].speedY * force) * deltaTime;
   }
+}
 
-  particles[0].color = {0,255,0}; // marking the first particle
-  particles[sizeParticlues-1].color = {0,0,255}; // marking the last particle
+void Repel(Particle particles[], size_t sizeParticlues, float force, float xAxis, float yAxis, float deltaTime, int i, int j)
+{
+  force = 1/force;
+  // this repels from first to last - 1
+  particles[i].particle.x += ((-xAxis) * particles[i].speedX * force) * deltaTime;
+  particles[i].particle.y += ((-yAxis) * particles[i].speedY * force) * deltaTime;
+
+  // this repels the last
+  if(j >= sizeParticlues - 1)
+  {
+    particles[j].particle.x += ((xAxis) * particles[j].speedX * force) * deltaTime;
+    particles[j].particle.y += ((yAxis) * particles[j].speedY * force) * deltaTime;
+  }
 }
 
 void InitParticles(SDLWindowState state, Particle &particles)
 {
-  int size = 20;
+  int size = 2;
   if (!particles.active)
   {
     particles.active = true;
@@ -181,7 +170,7 @@ void RestartPartilcles(SDLWindowState state, Particle &particles)
   }
 }
 
-bool EventHandler(SDLWindowState *state, SDL_Event &event, bool &restart)
+bool EventHandler(SDLWindowState *state, SDL_Event &event, bool &restart, bool &pause)
 {
   switch (event.type)
   {
@@ -197,10 +186,12 @@ bool EventHandler(SDLWindowState *state, SDL_Event &event, bool &restart)
       break;
     }
     case SDL_EVENT_KEY_UP:
-      if (event.key.key == SDLK_R)
-      {
-        SDL_Log("Restarting...");
-        restart = true;
+      switch (event.key.key) {
+        case SDLK_R:
+          restart = true;
+          break;
+        case SDLK_P:
+          pause = pause ? false : true;
       }
       break;
   }
